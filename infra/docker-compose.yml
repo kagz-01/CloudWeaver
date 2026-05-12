@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: cloudweaver-db
+    environment:
+      POSTGRES_USER: cloudweaver
+      POSTGRES_PASSWORD: cloudweaver_password
+      POSTGRES_DB: cloudweaver_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: cloudweaver-vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./vault/config:/vault/config
+      - ./vault/data:/vault/data
+
+  # Simplified ArgoCD for local demo - usually requires a k8s cluster
+  # For local MVP, we will use a mock service or a lightweight proxy
+  # until we decide to use k3d/kind
+  argocd-mock:
+    image: nginx:alpine
+    container_name: cloudweaver-argocd-mock
+    ports:
+      - "8081:80"
+
+volumes:
+  postgres_data:
